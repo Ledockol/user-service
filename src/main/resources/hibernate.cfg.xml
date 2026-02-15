@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- Настройки подключения к базе данных -->
+        <property name="hibernate.connection.provider_class">org.hibernate.resource.jdbc.connection.provider.HikariCPConnectionProvider</property>
+        <property name="hibernate.hikari.dataSource.url">jdbc:postgresql://localhost:5432/mytestdb</property> <!-- Имя базы данных mytestdb -->
+        <property name="hibernate.hikari.dataSource.username">myuser</property> <!-- Созданный пользователь myuser -->
+        <property name="hibernate.hikari.dataSource.password">myuserpassword</property> <!-- Пароль пользователя -->
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+
+
+        <!-- Настройки пула соединений HikariCP -->
+        <property name="hibernate.hikari.maximumPoolSize">20</property>
+        <property name="hibernate.hikari.idleTimeout">30000</property>
+        <property name="hibernate.hikari.connectionTimeout">30000</property>
+        <property name="hibernate.hikari.minimumIdle">10</property>
+
+        <!-- Общие настройки Hibernate -->
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        <property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+
+        <!-- Настройки автоматической генерации схемы -->
+        <property name="hbm2ddl.auto">update</property>
+
+        <!-- Настройки кэширования -->
+        <property name="hibernate.cache.use_second_level_cache">false</property>
+        <property name="hibernate.cache.use_query_cache">false</property>
+
+        <!-- Дополнительные настройки транзакций -->
+        <property name="hibernate.current_session_context_class">thread</property>
+        <property name="hibernate.connection.autocommit">false</property>
+    </session-factory>
+</hibernate-configuration>
