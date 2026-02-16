@@ -10,9 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class UserDaoImpl implements UserDao {
+public record UserDaoImpl(SessionFactory sessionFactory) implements UserDao {
     private static final Logger logger = LoggerFactory.getLogger(UserDaoImpl.class);
-    private final SessionFactory sessionFactory;
+
+
 
     public UserDaoImpl(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -29,14 +30,12 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public User save(User user) {
+    public void save(User user) {
         try (Session session = sessionFactory.openSession()) {
             Transaction tx = session.beginTransaction();
             try {
-                Long id = (Long) session.save(user);
-                user.setId(id);
+                session.save(user);
                 tx.commit();
-                return user;
             } catch (HibernateException e) {
                 if (tx != null) tx.rollback();
                 throw e;
@@ -94,6 +93,26 @@ public class UserDaoImpl implements UserDao {
         } catch (HibernateException e) {
             logger.error("Ошибка при поиске пользователя по email: " + email, e);
             return null;
+        }
+    }
+    public List<User> findByAge(int age) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE age = :age", User.class)
+                    .setParameter("age", age)
+                    .list();
+        } catch (HibernateException e) {
+            logger.error("Ошибка при поиске по возрасту", e);
+            throw e;
+        }
+    }
+    public List<User> findByName(String name) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("FROM User WHERE name = :name", User.class)
+                    .setParameter("name", name)
+                    .list();
+        } catch (HibernateException e) {
+            logger.error("Ошибка при поиске по имени", e);
+            throw e;
         }
     }
 }

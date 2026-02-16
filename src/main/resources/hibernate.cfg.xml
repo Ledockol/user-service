@@ -5,19 +5,17 @@
 
 <hibernate-configuration>
     <session-factory>
+
         <!-- Настройки подключения к базе данных -->
-        <property name="hibernate.connection.provider_class">org.hibernate.resource.jdbc.connection.provider.HikariCPConnectionProvider</property>
-        <property name="hibernate.hikari.dataSource.url">jdbc:postgresql://localhost:5432/mytestdb</property> <!-- Имя базы данных mytestdb -->
-        <property name="hibernate.hikari.dataSource.username">myuser</property> <!-- Созданный пользователь myuser -->
-        <property name="hibernate.hikari.dataSource.password">myuserpassword</property> <!-- Пароль пользователя -->
-        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
 
+        <!-- Правильные настройки подключения -->
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/mydatabase</property>
+        <property name="hibernate.connection.username">andrey</property>
+        <property name="hibernate.connection.password">5555</property>
 
-        <!-- Настройки пула соединений HikariCP -->
-        <property name="hibernate.hikari.maximumPoolSize">20</property>
-        <property name="hibernate.hikari.idleTimeout">30000</property>
-        <property name="hibernate.hikari.connectionTimeout">30000</property>
-        <property name="hibernate.hikari.minimumIdle">10</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQL10Dialect</property>
 
         <!-- Общие настройки Hibernate -->
         <property name="show_sql">true</property>
@@ -34,5 +32,6 @@
         <!-- Дополнительные настройки транзакций -->
         <property name="hibernate.current_session_context_class">thread</property>
         <property name="hibernate.connection.autocommit">false</property>
+        <mapping class="com.example.models.User"/>
     </session-factory>
 </hibernate-configuration>

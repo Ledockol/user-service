@@ -1,8 +1,6 @@
 package com.example.util;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -19,18 +17,13 @@ public class HibernateSessionFactoryUtil {
                 Configuration configuration = new Configuration();
                 configuration.configure();
 
-                StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder()
-                        .applySettings(configuration.getProperties());
-                serviceRegistry = builder.build();
+                serviceRegistry = new StandardServiceRegistryBuilder()
+                        .applySettings(configuration.getProperties())
+                        .build();
 
-                MetadataSources sources = new MetadataSources(serviceRegistry);
-                Metadata metadata = sources.getMetadataBuilder().build();
-                sessionFactory = metadata.buildSessionFactory();
+                sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
             } catch (Exception e) {
-                if (serviceRegistry != null) {
-                    StandardServiceRegistryBuilder.destroy(serviceRegistry);
-                }
                 e.printStackTrace();
             }
         }

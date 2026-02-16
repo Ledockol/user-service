@@ -88,19 +88,14 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+
     @Override
     public List<User> findUsersByName(String name) {
-        return userDao.findAll()
-                .stream()
-                .filter(u -> u.getName().equalsIgnoreCase(name))
-                .toList();
+        return userDao.findByName(name);
     }
 
     @Override
     public List<User> findUsersByAge(int age) {
-        return userDao.findAll()
-                .stream()
-                .filter(u -> u.getAge() == age)
-                .toList();
+        return userDao.findByAge(age);
     }
 }
