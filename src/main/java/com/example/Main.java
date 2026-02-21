@@ -73,7 +73,7 @@ public class Main {
         }
     }
 
-    private static void createUser(Scanner scanner) {
+    public static void createUser(Scanner scanner) {
         try {
             System.out.print("Введите имя: ");
             String name = scanner.nextLine();
@@ -99,7 +99,7 @@ public class Main {
         }
     }
 
-    private static void showAllUsers() {
+    public static void showAllUsers() {
         List<User> users = userService.getAllUsers();
 
         if (!users.isEmpty()) {
@@ -112,7 +112,7 @@ public class Main {
         }
     }
 
-    private static void getUserById(Scanner scanner) {
+    public static void getUserById(Scanner scanner) {
         try {
             System.out.print("Введите ID пользователя: ");
             Long id = Long.parseLong(scanner.nextLine());
@@ -130,7 +130,7 @@ public class Main {
         }
     }
 
-    private static void updateUser(Scanner scanner) {
+    public static void updateUser(Scanner scanner) {
         try {
             System.out.print("Введите ID пользователя для обновления: ");
             Long id = Long.parseLong(scanner.nextLine());
@@ -173,7 +173,7 @@ public class Main {
         }
     }
 
-    private static void deleteUser(Scanner scanner) {
+    public static void deleteUser(Scanner scanner) {
         try {
             System.out.print("Введите ID пользователя для удаления: ");
             Long id = Long.parseLong(scanner.nextLine());
@@ -192,7 +192,7 @@ public class Main {
         }
     }
 
-    private static void findByEmail(Scanner scanner) {
+    public static void findByEmail(Scanner scanner) {
         try {
             System.out.print("Введите email для поиска: ");
             String email = scanner.nextLine();
@@ -208,7 +208,7 @@ public class Main {
         }
     }
 
-    private static void findByName(Scanner scanner) {
+    public static void findByName(Scanner scanner) {
         try {
             System.out.print("Введите имя для поиска: ");
             String name = scanner.nextLine();
@@ -227,7 +227,7 @@ public class Main {
         }
     }
 
-    private static void findByAge(Scanner scanner) {
+    public static void findByAge(Scanner scanner) {
         try {
             System.out.print("Введите возраст для поиска: ");
             int age = Integer.parseInt(scanner.nextLine());
