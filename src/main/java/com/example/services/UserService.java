@@ -5,96 +5,86 @@ import com.example.exceptions.ResourceNotFoundException;
 import com.example.models.User;
 import com.example.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-
     @Autowired
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private UserRepository userRepository;
 
-    @Transactional
     public UserDto createUser(UserDto userDto) {
-        User user = convertDtoToEntity(userDto);
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setRegistrationDate(LocalDate.now());
-        return convertEntityToDto(userRepository.save(user));
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<UserDto> getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(this::convertEntityToDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь", id));
-    }
-
-    @Transactional(readOnly = true)
-    public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertEntityToDto)
-                .toList();
-    }
-
-    @Transactional
-    public Optional<UserDto> updateUser(Long id, UserDto userDto) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    user.setName(userDto.getName());
-                    user.setEmail(userDto.getEmail());
-                    user.setAge(userDto.getAge());
-                    user.setPhone(userDto.getPhone());
-                    if (userDto.getPassword() != null) {
-                        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-                    }
-                    return convertEntityToDto(userRepository.save(user));
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь", id));
-    }
-
-    @Transactional
-    public void deleteUser(Long id) {
-        userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь", id));
-        userRepository.deleteById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<UserDto> findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(this::convertEntityToDto);
-    }
-
-    private User convertDtoToEntity(UserDto userDto) {
         User user = new User();
-        user.setId(UUID.randomUUID().getMostSignificantBits());
+        user.setId(userDto.getId());
         user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
         user.setAge(userDto.getAge());
-        user.setPhone(userDto.getPhone());
-        user.setRole(userDto.getRole());
-        return user;
+
+        User savedUser = userRepository.save(user);
+        return mapToDto(savedUser);
     }
 
-    private UserDto convertEntityToDto(User user) {
-        UserDto userDto = new UserDto();
-        userDto.setId(user.getId());
-        userDto.setName(user.getName());
-        userDto.setEmail(user.getEmail());
-        userDto.setAge(user.getAge());
-        userDto.setPhone(user.getPhone());
-        userDto.setRole(user.getRole());
-        return userDto;
+    public Optional<UserDto> getUserById(Long id) {
+        return userRepository.findById(id)
+                .map(this::mapToDto);
+    }
+
+    public UserDto updateUser(Long id, UserDto userDto) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found", "USER_NOT_FOUND"));
+
+        existingUser.setName(userDto.getName());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setAge(userDto.getAge());
+
+        return mapToDto(userRepository.save(existingUser));
+    }
+
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<UserDto> findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(this::mapToDto);
+    }
+
+    public List<UserDto> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> usersPage = userRepository.findAll(pageable);
+        return usersPage.getContent()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> searchUsersByName(String name) {
+        return userRepository.findByNameContainingIgnoreCase(name)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private UserDto mapToDto(User entity) {
+        UserDto dto = new UserDto();
+        dto.setName(entity.getName());
+        dto.setEmail(entity.getEmail());
+        dto.setAge(entity.getAge());
+        return dto;
     }
 }

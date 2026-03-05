@@ -1,22 +1,14 @@
 package com.example.exceptions;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Ресурс не найден")
 public class ResourceNotFoundException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+    private final String errorCode;
 
-    public ResourceNotFoundException(String message) {
+    public ResourceNotFoundException(String message, String errorCode) {
         super(message);
+        this.errorCode = errorCode;
     }
 
-    public ResourceNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ResourceNotFoundException(String entityName, Long id) {
-        this(String.format("%s с ID %d не найден", entityName, id));
+    public String getErrorCode() {
+        return errorCode;
     }
 }
-

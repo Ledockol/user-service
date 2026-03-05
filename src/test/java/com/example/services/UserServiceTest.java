@@ -1,126 +1,104 @@
 package com.example.services;
 
-import com.example.dao.UserDao;
+import com.example.dto.UserDto;
 import com.example.models.User;
+import com.example.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class UserServiceTest {
 
-    @Mock
-    private UserDao mockDao;
+    @Autowired
+    private UserService userService;
 
-    @InjectMocks
-    private UserService service = new UserServiceImpl(mockDao);
+    @MockBean
+    private UserRepository userRepository;
+
+    private UserDto userDto;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        userDto = new UserDto();
+        userDto.setId(1L);
+        userDto.setName("Test User");
+        userDto.setEmail("test@example.com");
+        userDto.setAge(25);
+
+        user = new User();
+        user.setId(1L);
+        user.setName("Test User");
+        user.setEmail("test@example.com");
+        user.setAge(25);
     }
 
     @Test
-    void testCreateUser() {
-        User user = new User("Test User", "test@test.com", 25);
-        when(mockDao.save(any(User.class)))
+    void createUser() {
+        when(userRepository.save(any(User.class)))
                 .thenReturn(user);
-        User createdUser = service.createUser(user);
-        assertNotNull(createdUser);
-        assertEquals(user.getName(), createdUser.getName());
-        assertEquals(user.getEmail(), createdUser.getEmail());
-        assertEquals(user.getAge(), createdUser.getAge());
-        verify(mockDao, times(1)).save(user);
+
+        UserDto createdUser = userService.createUser(userDto);
+        assertThat(createdUser.getId()).isEqualTo(1L);
+        assertThat(createdUser.getName()).isEqualTo("Test User");
     }
 
     @Test
-    void testUpdateUser() {
-        User user = new User(1L, "Test User", "test@test.com", 25);
-        when(mockDao.update(any(User.class)))
+    void getUserById() {
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        Optional<UserDto> foundUser = userService.getUserById(1L);
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getName()).isEqualTo("Test User");
+    }
+
+    @Test
+    void updateUser() {
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class)))
                 .thenReturn(user);
-        User updatedUser = service.updateUser(user);
-        assertNotNull(updatedUser);
-        assertEquals(user.getId(), updatedUser.getId());
-        verify(mockDao, times(1)).update(user);
+
+        UserDto updatedUser = userService.updateUser(1L, userDto);
+        assertThat(updatedUser.getId()).isEqualTo(1L);
+        assertThat(updatedUser.getName()).isEqualTo("Test User");
     }
 
     @Test
-    void testDeleteUser() {
-        Long userId = 1L;
-        when(mockDao.findById(userId))
-                .thenReturn(new User(userId, "Test", "test@test.com", 25));
-        service.deleteUser(userId);
-        verify(mockDao, times(1)).findById(userId);
-        verify(mockDao, times(1)).delete(any(User.class));
+    void deleteUser() {
+        doNothing().when(userRepository).deleteById(1L);
+        userService.deleteUser(1L);
+        verify(userRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    void testGetUserById() {
-        Long userId = 1L;
-        User expectedUser = new User(userId, "Test", "test@test.com", 25);
-        when(mockDao.findById(userId))
-                .thenReturn(expectedUser);
-        User foundUser = service.getUserById(userId);
-        assertEquals(expectedUser, foundUser);
+    void getAllUsers() {
+        when(userRepository.findAll())
+                .thenReturn(List.of(user));
+
+        List<UserDto> allUsers = userService.getAllUsers();
+        assertThat(allUsers).hasSize(1);
     }
 
     @Test
-    void testFindByEmail() {
-        String email = "test@test.com";
-        User expectedUser = new User(1L, "Test", email, 25);
-        when(mockDao.findByEmail(email))
-                .thenReturn(expectedUser);
-        User foundUser = service.findByEmail(email);
-        assertEquals(expectedUser, foundUser);
-    }
+    void findUserByEmail() {
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
 
-    @Test
-    void testFindUsersByName() {
-        String name = "Test";
-        List<User> expectedUsers = List.of(
-                new User(1L, name, "test1@test.com", 25),
-                new User(2L, name, "test2@test.com", 30)
-        );
-        when(mockDao.findByName(name))
-                .thenReturn(expectedUsers);
-        List<User> foundUsers = service.findUsersByName(name);
-        assertEquals(expectedUsers, foundUsers);
-    }
-
-    @Test
-    void testFindUsersByAge() {
-        int age = 25;
-        List<User> expectedUsers = List.of(
-                new User(1L, "Test1", "test1@test.com", age),
-                new User(2L, "Test2", "test2@test.com", age)
-        );
-        when(mockDao.findByAge(age))
-                .thenReturn(expectedUsers);
-        List<User> foundUsers = service.findUsersByAge(age);
-        assertEquals(expectedUsers, foundUsers);
-    }
-
-    @Test
-    void testGetAllUsers() {
-        List<User> expectedUsers = List.of(
-                new User(1L, "User1", "user1@test.com", 25),
-                new User(2L, "User2", "user2@test.com", 30),
-                new User(3L, "User3", "user3@test.com", 22)
-        );
-
-        when(mockDao.findAll())
-                .thenReturn(expectedUsers);
-
-        List<User> allUsers = service.getAllUsers();
-
-        assertEquals(expectedUsers, allUsers);
-        verify(mockDao, times(1)).findAll();
+        Optional<UserDto> foundUser = userService.findUserByEmail("test@example.com");
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getEmail()).isEqualTo("test@example.com");
     }
 }

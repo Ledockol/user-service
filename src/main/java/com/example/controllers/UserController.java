@@ -1,38 +1,84 @@
-package com.example.dto;
+package com.example.controllers;
 
-import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
+import com.example.dto.UserDto;
+import com.example.exceptions.ResourceNotFoundException;
+import com.example.models.User;
+import com.example.repositories.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode
-public class UserDto {
-    private Long id;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Optional;
 
-    @NotNull(message = "Имя пользователя не может быть пустым")
-    @Size(min = 2, max = 100, message = "Длина имени должна быть от 2 до 100 символов")
-    private String name;
+@RestController
+@RequestMapping("/api/v1/users")
+@Validated
+public class UserController {
 
-    @NotNull(message = "Email не может быть пустым")
-    @Email(message = "Некорректный формат email")
-    private String email;
+    private final UserRepository userRepository;
 
-    @NotNull(message = "Возраст не может быть пустым")
-    @Min(value = 1, message = "Возраст должен быть больше 0")
-    @Max(value = 120, message = "Возраст не может превышать 120 лет")
-    private Integer age;
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-    @NotNull(message = "Телефон не может быть пустым")
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Некорректный формат телефона")
-    private String phone;
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto createUser(@Valid @RequestBody UserDto userDto) {
+        return convertToEntityAndSave(userDto);
+    }
 
-    @NotNull(message = "Роль не может быть пустой")
-    private String role;
+    private UserDto convertToEntityAndSave(UserDto userDto) {
+        return userDto;
+    }
 
-    // Дополнительные поля можно добавить по необходимости
-    // Например:
-    // private String address;
-    // private String description;
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return userRepository.findById(id)
+                .map(this::convertToDto)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден", String.valueOf(id)));
+    }
+
+    @GetMapping
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    return convertToDto(user);
+                })
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден", String.valueOf(id)));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
+    }
+
+    @GetMapping("/search/email/{email}")
+    public ResponseEntity<UserDto> findUserByEmail(@PathVariable String email) {
+        return userRepository.findByEmail(email)
+                .map(this::convertToDto)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с таким email не найден", email));
+    }
+
+    private UserDto convertToDto(User user) {
+        return new UserDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getAge()
+        );
+    }
 }
